@@ -1,0 +1,53 @@
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/featurepods/popups/ui/compose/StatusBarDynamicIslandChip.kt b/packages/SystemUI/src/com/android/systemui/statusbar/featurepods/popups/ui/compose/StatusBarDynamicIslandChip.kt
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/featurepods/popups/ui/compose/StatusBarDynamicIslandChip.kt
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/featurepods/popups/ui/compose/StatusBarDynamicIslandChip.kt
+@@ -150,5 +150,5 @@
+             modifier =
+                 modifier
+-                    .defaultMinSize(minHeight = 32.dp)
++                    .defaultMinSize(minHeight = maxOf(32.dp, cutoutSpec.height + DynamicIslandCutoutVerticalPadding * 2))
+                     .width(animatedWidth)
+                     .graphicsLayer {
+@@ -320,6 +320,9 @@
+ private val DynamicIslandEmbeddedGapSidePadding = 10.dp
++private val DynamicIslandCutoutVerticalPadding = 4.dp
+ 
+ data class DynamicIslandCutoutSpec(
+     val embeddedGapWidth: Dp,
+     val horizontalOffset: Dp,
++    val height: Dp = 0.dp,
++    val centerY: Dp = 0.dp,
+ )
+@@ -355,4 +358,6 @@
+                     embeddedGapWidth = embeddedGapWidthDp,
+                     horizontalOffset = horizontalOffsetDp,
++                    height = topCutout.height().toDp(),
++                    centerY = topCutout.exactCenterY().toDp(),
+                 )
+             }
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/featurepods/popups/ui/compose/StatusBarDynamicIslandContainer.kt b/packages/SystemUI/src/com/android/systemui/statusbar/featurepods/popups/ui/compose/StatusBarDynamicIslandContainer.kt
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/featurepods/popups/ui/compose/StatusBarDynamicIslandContainer.kt
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/featurepods/popups/ui/compose/StatusBarDynamicIslandContainer.kt
+@@ -33,2 +33,6 @@
+ import androidx.compose.foundation.layout.offset
++import androidx.compose.ui.layout.boundsInWindow
++import androidx.compose.ui.layout.onGloballyPositioned
++import androidx.compose.ui.unit.IntOffset
++import kotlin.math.roundToInt
+ import androidx.compose.foundation.layout.padding
+@@ -174,8 +178,14 @@
+     }
+ 
++    var pillCenterYPx by remember { mutableFloatStateOf(-1f) }
++    val cutoutCenterYPx = with(LocalDensity.current) { cutoutSpec.centerY.toPx() }
++    val yOffsetPx =
++        if (pillCenterYPx > 0f && cutoutSpec.height > 0.dp) cutoutCenterYPx - pillCenterYPx else 0f
++
+     Box(
+         modifier =
+             modifier
+                 .padding(horizontal = 8.dp)
+-                .offset(x = cutoutSpec.horizontalOffset)
++                .onGloballyPositioned { pillCenterYPx = it.boundsInWindow().center.y }
++                .offset { IntOffset(cutoutSpec.horizontalOffset.roundToPx(), yOffsetPx.roundToInt()) }
+                 .width(overallWidth)
