@@ -1,0 +1,55 @@
+--- a/core/java/android/security/pif/PlayIntegritySpoofService.java
++++ b/core/java/android/security/pif/PlayIntegritySpoofService.java
+@@ -49,6 +49,20 @@
+         "FINGERPRINT", "google/marlin/marlin:10/QP1A.191005.007.A3/5972272:user/release-keys"
+     );
+ 
++    private static final String GSA_PACKAGE = "com.google.android.googlequicksearchbox";
++
++    private static final Map<String, Object> PIXEL_GSA_PROPS = Map.of(
++        "BRAND", "google",
++        "MANUFACTURER", "Google",
++        "DEVICE", "mustang",
++        "PRODUCT", "mustang_beta",
++        "MODEL", "Pixel 10 Pro XL",
++        "ID", "CP21.260330.011",
++        "TYPE", "user",
++        "TAGS", "release-keys",
++        "FINGERPRINT", "google/mustang_beta/mustang:17/CP21.260330.011/15499021:user/release-keys"
++    );
++
+     private static final ArraySet<String> PRIV_PKGS = new ArraySet<>();
+     private static final ArraySet<String> FEATURES_PIXEL = new ArraySet<>();
+     private static final ArraySet<String> FEATURES_PIXEL_OTHERS = new ArraySet<>();
+@@ -682,6 +696,17 @@
+         Log.i(TAG, "Photos spoofing enabled - device appears as Pixel XL");
+     }
+ 
++    public boolean shouldSpoofGsa(String packageName) {
++        return TextUtils.equals(GSA_PACKAGE, packageName);
++    }
++
++    public void spoofGsaProps() {
++        for (Map.Entry<String, Object> entry : PIXEL_GSA_PROPS.entrySet()) {
++            spoofField(entry.getKey(), String.valueOf(entry.getValue()), "GSA");
++        }
++        Log.i(TAG, "GSA spoofing enabled - device appears as Pixel 10 Pro XL");
++    }
++
+     public Boolean hasSystemFeature(String name, int version) {
+         if (name == null) return null;
+ 
+--- a/core/java/android/app/ActivityThread.java
++++ b/core/java/android/app/ActivityThread.java
+@@ -8211,6 +8211,10 @@
+         if (pifService.shouldSpoofPhotos(data.appInfo.packageName)) {
+             pifService.spoofPhotosProps();
+         }
++
++        if (pifService.shouldSpoofGsa(data.appInfo.packageName)) {
++            pifService.spoofGsaProps();
++        }
+ 
+         // Initialize the default http proxy in this process.
+         Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "Setup proxies");
+         
