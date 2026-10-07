@@ -1,0 +1,36 @@
+diff --git a/src/com/android/axion/axionparts/ui/screens/AppSpoofingScreen.kt b/src/com/android/axion/axionparts/ui/screens/AppSpoofingScreen.kt
+--- a/src/com/android/axion/axionparts/ui/screens/AppSpoofingScreen.kt
++++ b/src/com/android/axion/axionparts/ui/screens/AppSpoofingScreen.kt
+
+@@ -83 +87 @@
+            mapOf("MODEL" to "Lenovo TB-9707F", "MANUFACTURER" to "Lenovo"),
++        ),
++        DeviceProfile(
++            "Circle To Search",
++            mapOf(
++                "MODEL" to "Pixel 9 Pro",
++                "MANUFACTURER" to "google",
++                "DEVICE" to "caiman",
++                "FINGERPRINT" to "google/caiman_beta/caiman:CANARY/ZP11.260320.007/15154667:user/release-keys",
++          ),
+        ),
+    )
+@@ -176,7 +186,18 @@
+     fun loadConfig() {
+         scope.launch {
+             val result = withContext(Dispatchers.IO) { loadSpoofedAppsConfig(context) }
+             enabled = result.first
+             spoofedApps = result.second
++
++            if (spoofedApps.isEmpty()) {
++                spoofedApps = listOf(
++                    AppSpoofConfig(
++                        "com.google.android.googlequicksearchbox",
++                        "Google",
++                        PRESET_PROFILES.first { it.name == "Circle To Search" }.props,
++                    ),
++                )
++                saveConfig()
++            }
+         }
+     }
